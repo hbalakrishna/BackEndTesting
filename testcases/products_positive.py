@@ -4,15 +4,16 @@ from tools import req
 from tools import dbconnect
 
 request = req.REQ()
+mysql_conn = dbconnect.DBConnect()
 
-def post_product():
+def test_post_product():
 
-    #a simple payload
-    #title = 'TEST1 TITLE'
-    #price = "99.9"
+    #Create a global variable for product_id
+    global product_id
+    global data
 
     data = {
-        "name": "Test1 Title",
+        "name": "NewProduct2",
         "type": "simple",
         "regular_price": "21.99",
         "description": "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.",
@@ -32,7 +33,8 @@ def post_product():
     #Verify the response body
     return_name = resp_body["name"]
     return_price = resp_body["regular_price"]
-    return_id = resp_body["id"]
+    product_id = resp_body["id"]
+
 
     #Assert the response body
     assert return_name==data["name"], "Mismatch in title: The name of the product" \
@@ -45,8 +47,45 @@ def post_product():
 
 
     print("all the assertions are passed")
+    # print("Product ID {0}".format(product_id))
+
+
+#Testing the product in the database after the post request
+def testProduct_db():
+
+    #MySQL query to fetch the the product name, type & price for the product posted
+
+    mysql_query = '''
+                    select posts.post_name,posts.post_type,postm.meta_value
+                    from wp324.wp5b_posts as  posts 
+                    JOIN wp324.wp5b_postmeta  as postm
+                    ON posts.id = postm.post_id
+                    where posts.id={} and meta_key = '_regular_price'
+    '''.format(product_id)
+
+    result = mysql_conn.select('wp324',mysql_query)
+
+    #extract the values for the data posted in the database & verify them
+    db_title = result[0][0]
+    db_type = result[0][1]
+    db_price = result[0][2]
+
+    #Assert them
+    # Assert the response body
+    assert db_title == data["name"].lower(), "Mismatch in title: The name of the product" \
+                                        " in the response body & posted name do not match, expected name is {0}" \
+                                        " the response name is {1}".format(data["name"].lower(), db_title)
+
+    assert db_price == data["regular_price"], "Mismatch in regular_price: The price of the product" \
+                                                  " in the response body & posted name do not match, expected price is {0} " \
+                                                  "the return price is {1}".format(data["regular_price"], db_price)
+
+
+    # print(result)
+    print("Products positive test case, the products created have been verified in the database")
 
 
 
 
-post_product()
+test_post_product()
+testProduct_db()

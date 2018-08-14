@@ -8,7 +8,7 @@ class DBConnect():
     #private class
     def __conect(self,db): #pass in the database which needs to be connected
         host = '127.0.0.1'
-        conn = pymysql.connect(host=host, port=3306,user='root',db=db)
+        conn = pymysql.connect(host=host, port=3306,user='root',db=db,password='mysql')
 
         return conn
 
@@ -32,6 +32,8 @@ class DBConnect():
         conn.close()
         cur.close()
 
+        return result_set
+
     def update(self,db,query):
         conn = self.__conect(db)
         #create a cursor
@@ -49,4 +51,4 @@ class DBConnect():
         # return the result
         return result
 
-    
+
